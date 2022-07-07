@@ -9,29 +9,25 @@ import com.android.mobile.alteacaretest.network.ResponseCallback
 import com.android.mobile.alteacaretest.state.UIState
 
 class DoctorViewModel : ViewModel() {
-    private var doctorLiveData: MutableLiveData<UIState> = MutableLiveData()
+    private var doctorLiveData = MutableLiveData<UIState>()
 
-    fun loadDoctor() {
+    fun getDoctorLiveData(): MutableLiveData<UIState> {
         doctorLiveData.postValue(UIState.Loading)
 
-        MutableLiveData<UIState>().apply {
-            val request = NetworkCall
-                .provideRequest(NetworkInterface::class.java)
-                .loadAllDoctor()
+        val request = NetworkCall
+            .provideRequest(NetworkInterface::class.java)
+            .loadAllDoctor()
 
-            NetworkCall.process(request, object : ResponseCallback<ResponseData> {
-                override fun onSuccess(responseBody: ResponseData) {
-                    doctorLiveData.postValue(UIState.SuccessLoad(responseBody))
-                }
+        NetworkCall.process(request, object : ResponseCallback<ResponseData> {
+            override fun onSuccess(responseBody: ResponseData) {
+                doctorLiveData.postValue(UIState.SuccessLoad(responseBody))
+            }
 
-                override fun onError(errorCode: String, errorMessage: String) {
-                    doctorLiveData.postValue(UIState.FailedLoad)
-                }
-            })
-        }
-    }
+            override fun onError(errorCode: String, errorMessage: String) {
+                doctorLiveData.postValue(UIState.FailedLoad)
+            }
+        })
 
-    fun getDoctorLiveData() : MutableLiveData<UIState> {
         return doctorLiveData
     }
 }

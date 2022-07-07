@@ -72,8 +72,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadAllDoctor() {
-        viewModel.loadDoctor()
-
         viewModel.getDoctorLiveData().observe(this, Observer { state ->
             when(state) {
                 is UIState.Loading -> {
@@ -99,11 +97,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setDataFilter(doctorList: ArrayList<Doctor>) {
-        listHospital.add(Hospital(name = getString(R.string.hospital_filter)))
-        listSpecialization.add(Specialization(name = getString(R.string.specialization_filter)))
-
         val hashSpecialization = HashSet<Specialization>()
         val hashHospital = HashSet<Hospital>()
+
+        listHospital.add(Hospital(name = getString(R.string.hospital_filter)))
+        listSpecialization.add(Specialization(name = getString(R.string.specialization_filter)))
 
         doctorList.forEach {
             hashSpecialization.add(it.specialization)

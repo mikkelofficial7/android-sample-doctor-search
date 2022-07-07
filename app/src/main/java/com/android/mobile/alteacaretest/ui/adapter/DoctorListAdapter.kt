@@ -46,31 +46,31 @@ class DoctorListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder?>() {
             } as ArrayList<Doctor>
         }
 
-        val doctorFilteredHospital = runFirstFilter(listDoctorSearchFound, listHospital)
-        val doctorFilteredSpecialize = runSecondFilter(doctorFilteredHospital, listSpecialize)
+        val doctorFilteredHospital = runHospitalFilter(listDoctorSearchFound, listHospital)
+        val doctorFilteredSpecialize = runSpecializeFilter(doctorFilteredHospital, listSpecialize)
 
         listDoctorFiltered = doctorFilteredSpecialize
 
         notifyDataSetChanged()
     }
 
-    private fun runFirstFilter(
+    private fun runHospitalFilter(
         listDoctorFoundSearch: ArrayList<Doctor>,
         listHospital: List<Hospital>
     ): ArrayList<Doctor> {
         var listDoctorFoundFirstFilter = ArrayList<Doctor>()
 
-        val numberOfHospitalChecked = listHospital.filter { it.isChecked }.size
+        val numberOfHospitalChecked = listHospital.filter { it.isChecked }
 
-        if(numberOfHospitalChecked < 1) {
+        if(numberOfHospitalChecked.isEmpty()) {
             listDoctorFoundFirstFilter = listDoctorFoundSearch
 
         } else {
             listDoctorFoundSearch.forEach { doctor ->
-                val isHospitalFoundByDoctorData =
+                val hospitalFoundByDoctorData =
                     listHospital.find { it.id == doctor.hospital.id && it.isChecked }
 
-                isHospitalFoundByDoctorData?.let {
+                hospitalFoundByDoctorData?.let {
                     listDoctorFoundFirstFilter.add(doctor)
                 }
             }
@@ -79,23 +79,23 @@ class DoctorListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder?>() {
         return listDoctorFoundFirstFilter
     }
 
-    private fun runSecondFilter(
+    private fun runSpecializeFilter(
         listFiltered: ArrayList<Doctor>,
         listSpecialize: List<Specialization>
     ): ArrayList<Doctor> {
 
         var listDoctorFoundSecondFilter = ArrayList<Doctor>()
 
-        val numberOfSpecializeChecked = listSpecialize.filter { it.isChecked }.size
+        val numberOfSpecializeChecked = listSpecialize.filter { it.isChecked }
 
-        if(numberOfSpecializeChecked < 1) {
+        if(numberOfSpecializeChecked.isEmpty()) {
             listDoctorFoundSecondFilter = listFiltered
 
         } else {
             listFiltered.forEach { doctor ->
-                val isSpecializeFoundByDoctorData = listSpecialize.find { it.id == doctor.specialization.id && it.isChecked }
+                val specializeFoundByDoctorData = listSpecialize.find { it.id == doctor.specialization.id && it.isChecked }
 
-                isSpecializeFoundByDoctorData?.let {
+                specializeFoundByDoctorData?.let {
                     listDoctorFoundSecondFilter.add(doctor)
                 }
             }

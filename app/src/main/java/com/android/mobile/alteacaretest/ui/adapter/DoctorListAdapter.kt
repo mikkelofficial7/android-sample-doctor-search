@@ -2,8 +2,6 @@ package com.android.mobile.alteacaretest.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Filter
-import android.widget.Filterable
 import androidx.recyclerview.widget.RecyclerView
 import com.android.mobile.alteacaretest.databinding.ItemDoctorListBinding
 import com.android.mobile.alteacaretest.model.detail.Doctor
@@ -13,7 +11,7 @@ import com.android.mobile.alteacaretest.ui.viewholder.DoctorListViewHolder
 import java.util.*
 import kotlin.collections.ArrayList
 
-class DoctorListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder?>(), Filterable {
+class DoctorListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder?>() {
     private var listDoctor: ArrayList<Doctor> = ArrayList()
     private var listDoctorFiltered: ArrayList<Doctor> = ArrayList()
 
@@ -36,78 +34,73 @@ class DoctorListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder?>(), Filt
         notifyDataSetChanged()
     }
 
-    override fun getFilter(): Filter {
-        return object : Filter() {
-            override fun performFiltering(wordToSearch: CharSequence?): FilterResults {
-                val searchWord = wordToSearch?.toString().orEmpty()
+    fun setFilterDoctor(listHospital: List<Hospital>,
+                        listSpecialize: List<Specialization>,
+                        doctorName: String) {
 
-                listDoctorFiltered = if (searchWord.isEmpty()) {
-                    listDoctor
-                } else {
-                    val filteredList = ArrayList<Doctor>()
-
-                    listDoctor.filter { doctor ->
-                                doctor.name
-                                .lowercase(Locale.getDefault())
-                                .contains(searchWord)
-                    }.forEach { itemDoctor ->
-                        filteredList.add(itemDoctor)
-                    }
-
-                    filteredList
-                }
-
-                return FilterResults().apply { values = listDoctorFiltered }
-            }
-
-            override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                listDoctorFiltered = if (results?.values == null)
-                    ArrayList()
-                else
-                    results.values as ArrayList<Doctor>
-
-                notifyDataSetChanged()
-            }
+        val listDoctorSearchFound = if(doctorName.isEmpty()) {
+            listDoctor
+        } else {
+            listDoctor.filter {
+                it.name.lowercase(Locale.getDefault()).contains(doctorName)
+            } as ArrayList<Doctor>
         }
+
+        val doctorFilteredHospital = runFirstFilter(listDoctorSearchFound, listHospital)
+        val doctorFilteredSpecialize = runSecondFilter(doctorFilteredHospital, listSpecialize)
+
+        listDoctorFiltered = doctorFilteredSpecialize
+
+        notifyDataSetChanged()
     }
 
-    fun getFilterHospital(listHospital: List<Hospital>) {
-        listDoctorFiltered = if(listHospital.isEmpty()) {
-            listDoctor
+    private fun runFirstFilter(
+        listDoctorFoundSearch: ArrayList<Doctor>,
+        listHospital: List<Hospital>
+    ): ArrayList<Doctor> {
+        var listDoctorFoundFirstFilter = ArrayList<Doctor>()
+
+        val numberOfHospitalChecked = listHospital.filter { it.isChecked }.size
+
+        if(numberOfHospitalChecked < 1) {
+            listDoctorFoundFirstFilter = listDoctorFoundSearch
 
         } else {
-            val listDoctorFound = ArrayList<Doctor>()
-            listDoctor.forEach { doctor ->
-                val isHospitalFoundByDoctorData = listHospital.find { it.id == doctor.hospital.id }
+            listDoctorFoundSearch.forEach { doctor ->
+                val isHospitalFoundByDoctorData =
+                    listHospital.find { it.id == doctor.hospital.id && it.isChecked }
 
                 isHospitalFoundByDoctorData?.let {
-                    listDoctorFound.add(doctor)
+                    listDoctorFoundFirstFilter.add(doctor)
                 }
             }
-
-            listDoctorFound
         }
 
-        notifyDataSetChanged()
+        return listDoctorFoundFirstFilter
     }
 
-    fun getFilterSpecialize(listSpecialize: List<Specialization>) {
-        listDoctorFiltered = if(listSpecialize.isEmpty()) {
-            listDoctor
+    private fun runSecondFilter(
+        listFiltered: ArrayList<Doctor>,
+        listSpecialize: List<Specialization>
+    ): ArrayList<Doctor> {
+
+        var listDoctorFoundSecondFilter = ArrayList<Doctor>()
+
+        val numberOfSpecializeChecked = listSpecialize.filter { it.isChecked }.size
+
+        if(numberOfSpecializeChecked < 1) {
+            listDoctorFoundSecondFilter = listFiltered
 
         } else {
-            val listDoctorFound = ArrayList<Doctor>()
-            listDoctor.forEach { doctor ->
-                val isSpecializeFoundByDoctorData = listSpecialize.find { it.id == doctor.specialization.id }
+            listFiltered.forEach { doctor ->
+                val isSpecializeFoundByDoctorData = listSpecialize.find { it.id == doctor.specialization.id && it.isChecked }
 
                 isSpecializeFoundByDoctorData?.let {
-                    listDoctorFound.add(doctor)
+                    listDoctorFoundSecondFilter.add(doctor)
                 }
             }
-
-            listDoctorFound
         }
 
-        notifyDataSetChanged()
+        return listDoctorFoundSecondFilter
     }
 }

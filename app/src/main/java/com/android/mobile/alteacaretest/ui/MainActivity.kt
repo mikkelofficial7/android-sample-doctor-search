@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private var listSpecialization = ArrayList<Specialization>()
     private var listHospital = ArrayList<Hospital>()
+    private var lastSearch = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,19 +52,22 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                findDoctor(s.toString())
+                lastSearch = s.toString()
+                filterDoctor()
             }
 
         })
 
-        SpinnerHospitalAdapter.onHospitalSelect = { listHospital ->
-            checkAdapterIsInitialize()
-            adapter.getFilterHospital(listHospital)
+        SpinnerHospitalAdapter.onHospitalSelect = { hospital ->
+            listHospital = hospital as ArrayList<Hospital>
+
+            filterDoctor()
         }
 
-        SpinnerSpecializationAdapter.onSpecializeSelect = { listSpecialize ->
-            checkAdapterIsInitialize()
-            adapter.getFilterSpecialize(listSpecialize)
+        SpinnerSpecializationAdapter.onSpecializeSelect = { specialize ->
+            listSpecialization = specialize as ArrayList<Specialization>
+
+            filterDoctor()
         }
     }
 
@@ -120,9 +124,9 @@ class MainActivity : AppCompatActivity() {
         binding.spinnerSpecialization.adapter = specializationAdapter
     }
 
-    private fun findDoctor(word: String) {
+    private fun filterDoctor() {
         checkAdapterIsInitialize()
-        adapter.filter.filter(word)
+        adapter.setFilterDoctor(listHospital, listSpecialization, lastSearch)
     }
 
     private fun initAdapter() {

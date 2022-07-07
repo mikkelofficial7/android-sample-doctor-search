@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AlteaCare Test</string>
+    <string name="search_doctor">Cari nama dokter</string>
+    <string name="hospital_filter">Filter Rumah Sakit</string>
+    <string name="specialization_filter">Filter Spesialis</string>
+    <string name="failed_load_doctor">Failed to load doctor</string>
+</resources>

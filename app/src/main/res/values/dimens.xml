@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="small_margin">8dp</dimen>
+    <dimen name="margin_5">5dp</dimen>
+    <dimen name="margin_10">10dp</dimen>
+
+    <dimen name="hospital_image_width">30dp</dimen>
+    <dimen name="doctor_image_width">100dp</dimen>
+    <dimen name="spinner_width">200dp</dimen>
+
+    <dimen name="text_default">16sp</dimen>
+    <dimen name="text_20">20sp</dimen>
+</resources>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_marginBottom="@dimen/margin_10"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/gray_light"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_doctor"
+        android:adjustViewBounds="true"
+        android:layout_width="@dimen/doctor_image_width"
+        android:layout_height="@dimen/doctor_image_width"
+        android:layout_marginTop="@dimen/margin_10"
+        android:layout_marginBottom="@dimen/margin_10"
+        android:layout_marginStart="@dimen/margin_10"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/tv_doctor_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/margin_10"
+        android:layout_marginStart="@dimen/small_margin"
+        android:textSize="@dimen/text_default"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="@id/iv_doctor"
+        app:layout_constraintStart_toEndOf="@id/iv_doctor"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Dr. Jack Blossom"/>
+
+    <TextView
+        android:id="@+id/tv_hospital_and_specialist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/small_margin"
+        android:textColor="@color/black"
+        android:orientation="horizontal"
+        tools:text="Spesialis Kejiwaan"
+        app:layout_constraintTop_toBottomOf="@id/tv_doctor_name"
+        app:layout_constraintStart_toStartOf="@id/tv_doctor_name"
+        app:layout_constraintEnd_toEndOf="@id/tv_doctor_name"/>
+
+    <TextView
+        android:id="@+id/tv_doctor_about"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:layout_marginTop="@dimen/small_margin"
+        app:layout_constraintTop_toBottomOf="@id/tv_hospital_and_specialist"
+        app:layout_constraintStart_toStartOf="@id/tv_hospital_and_specialist"
+        app:layout_constraintEnd_toEndOf="@id/tv_hospital_and_specialist"
+        tools:text="Hai saya Specialist Kejiwaan Masyarakat Setempat" />
+
+    <TextView
+        android:id="@+id/tv_doctor_price"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:textSize="@dimen/text_20"
+        android:layout_marginBottom="@dimen/margin_10"
+        android:layout_marginTop="@dimen/margin_10"
+        android:layout_marginEnd="@dimen/margin_10"
+        app:layout_constraintTop_toBottomOf="@id/tv_doctor_about"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Rp.20.000"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

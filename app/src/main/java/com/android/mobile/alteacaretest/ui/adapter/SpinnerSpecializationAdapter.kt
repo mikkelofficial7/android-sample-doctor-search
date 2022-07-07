@@ -60,8 +60,7 @@ class SpinnerSpecializationAdapter(context: Context, data: List<Specialization>)
         }
 
         binding.spinnerCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
-            val getPosition = buttonView.tag as Int
-            if(!isSpinnerLoadFromView) listState[getPosition].isChecked = isChecked
+            if(!isSpinnerLoadFromView) listState[position].isChecked = isChecked
 
             onSpecializeSelect(getAllCheckedSpecialize())
         }

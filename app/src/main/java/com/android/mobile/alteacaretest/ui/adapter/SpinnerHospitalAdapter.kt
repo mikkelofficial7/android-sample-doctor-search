@@ -17,7 +17,7 @@ class SpinnerHospitalAdapter(context: Context, data: List<Hospital>) :
     }
 
     private val listState: ArrayList<Hospital> = data as ArrayList<Hospital>
-    private var isItemFirstLoad = true
+    private var isSpinnerLoadFromView = false
 
     override fun getDropDownView(
         position: Int, convertView: View?,
@@ -46,12 +46,12 @@ class SpinnerHospitalAdapter(context: Context, data: List<Hospital>) :
             binding = ItemSpinnerBinding.bind(row)
         }
 
+        binding.spinnerCheckbox.tag = position
         binding.spinnerName.text = listState[position].name
 
-        if(isItemFirstLoad) {
-            binding.spinnerCheckbox.isChecked = listState[position].isChecked
-            isItemFirstLoad = false
-        }
+        isSpinnerLoadFromView = true
+        binding.spinnerCheckbox.isChecked = listState[position].isChecked
+        isSpinnerLoadFromView = false
 
         if (position == 0) {
             binding.spinnerCheckbox.visibility = View.INVISIBLE
@@ -59,10 +59,9 @@ class SpinnerHospitalAdapter(context: Context, data: List<Hospital>) :
             binding.spinnerCheckbox.visibility = View.VISIBLE
         }
 
-        binding.spinnerCheckbox.tag = position
         binding.spinnerCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
             val getPosition = buttonView.tag as Int
-            if (!isItemFirstLoad) listState[getPosition].isChecked = isChecked
+            if (!isSpinnerLoadFromView) listState[getPosition].isChecked = isChecked
 
             onHospitalSelect(getAllCheckedHospital())
         }

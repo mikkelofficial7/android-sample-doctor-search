@@ -17,7 +17,7 @@ class SpinnerSpecializationAdapter(context: Context, data: List<Specialization>)
     }
 
     private val listState: ArrayList<Specialization> = data as ArrayList<Specialization>
-    private var isItemFirstLoad = true
+    private var isSpinnerLoadFromView = false
 
     override fun getDropDownView(
         position: Int, convertView: View?,
@@ -47,23 +47,21 @@ class SpinnerSpecializationAdapter(context: Context, data: List<Specialization>)
         }
 
         binding.spinnerName.text = listState[position].name
+        binding.spinnerName.text = listState[position].name
 
-        if(isItemFirstLoad) {
-            binding.spinnerCheckbox.isChecked = listState[position].isChecked
-            isItemFirstLoad = false
-        }
+        isSpinnerLoadFromView = true
+        binding.spinnerCheckbox.isChecked = listState[position].isChecked
+        isSpinnerLoadFromView = false
 
         if (position == 0) {
             binding.spinnerCheckbox.visibility = View.INVISIBLE
         } else {
-            binding.root.isEnabled = true
             binding.spinnerCheckbox.visibility = View.VISIBLE
         }
 
-        binding.spinnerCheckbox.tag = position
         binding.spinnerCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
             val getPosition = buttonView.tag as Int
-            if(!isItemFirstLoad) listState[getPosition].isChecked = isChecked
+            if(!isSpinnerLoadFromView) listState[getPosition].isChecked = isChecked
 
             onSpecializeSelect(getAllCheckedSpecialize())
         }

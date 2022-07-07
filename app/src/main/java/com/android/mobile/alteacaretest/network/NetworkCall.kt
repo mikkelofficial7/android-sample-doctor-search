@@ -2,7 +2,6 @@ package com.android.mobile.alteacaretest.network
 
 import retrofit2.Call
 import retrofit2.Callback
-import retrofit2.HttpException
 import retrofit2.Response
 
 object NetworkCall {

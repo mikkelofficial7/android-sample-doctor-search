@@ -16,6 +16,7 @@ import com.android.mobile.alteacaretest.ui.adapter.DoctorListAdapter
 import com.android.mobile.alteacaretest.model.detail.Doctor
 import com.android.mobile.alteacaretest.model.detail.Hospital
 import com.android.mobile.alteacaretest.model.detail.Specialization
+import com.android.mobile.alteacaretest.room.RoomBuilder
 import com.android.mobile.alteacaretest.state.UIState
 import com.android.mobile.alteacaretest.ui.adapter.SpinnerHospitalAdapter
 import com.android.mobile.alteacaretest.ui.adapter.SpinnerSpecializationAdapter
@@ -72,24 +73,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadAllDoctor() {
-        viewModel.getDoctorLiveData().observe(this, Observer { state ->
-            when(state) {
-                is UIState.Loading -> {
-                    showLoading()
-                }
-                is UIState.SuccessLoad -> {
-                    addDataDoctor(state.response.doctorList)
-                    setDataFilter(state.response.doctorList)
+        val dao = RoomBuilder.init(this)?.responseDao()
 
-                    hideLoading()
-                }
-                is UIState.FailedLoad -> {
-                    showErrorMessage()
+        if(dao?.getResponseData()?.doctorList?.isNotEmpty() == true) {
+            addDataDoctor(dao.getResponseData().doctorList)
+            setDataFilter(dao.getResponseData().doctorList)
+        } else {
+            viewModel.getDoctorLiveData().observe(this, Observer { state ->
+                when(state) {
+                    is UIState.Loading -> {
+                        showLoading()
+                    }
+                    is UIState.SuccessLoad -> {
+                        dao?.insertAllDoctor(state.response)
 
-                    hideLoading()
+                        addDataDoctor(state.response.doctorList)
+                        setDataFilter(state.response.doctorList)
+
+                        hideLoading()
+                    }
+                    is UIState.FailedLoad -> {
+                        showErrorMessage()
+
+                        hideLoading()
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
     private fun addDataDoctor(doctorList: ArrayList<Doctor>) {

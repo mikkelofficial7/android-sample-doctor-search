@@ -6,8 +6,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.mobile.alteacaretest.R
@@ -21,15 +21,17 @@ import com.android.mobile.alteacaretest.state.UIState
 import com.android.mobile.alteacaretest.ui.adapter.SpinnerHospitalAdapter
 import com.android.mobile.alteacaretest.ui.adapter.SpinnerSpecializationAdapter
 import com.android.mobile.alteacaretest.viewmodel.DoctorViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.HashSet
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var adapter: DoctorListAdapter
-
-    private val viewModel: DoctorViewModel by lazy {
-        ViewModelProvider(this)[DoctorViewModel::class.java]
+    private val adapter: DoctorListAdapter by lazy {
+        DoctorListAdapter()
     }
+
+    private val viewModel: DoctorViewModel by viewModels()
 
     private var listSpecialization = ArrayList<Specialization>()
     private var listHospital = ArrayList<Hospital>()
@@ -133,20 +135,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filterDoctor() {
-        checkAdapterIsInitialize()
         adapter.setFilterDoctor(listHospital, listSpecialization, lastSearch)
     }
 
     private fun initAdapter() {
-        checkAdapterIsInitialize()
-
-        adapter = DoctorListAdapter()
         binding.rvDoctor.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        binding.rvDoctor.setHasFixedSize(true)
         binding.rvDoctor.adapter = adapter
-    }
-
-    private fun checkAdapterIsInitialize() {
-        if(::adapter.isInitialized) return
     }
 
     private fun showLoading() {

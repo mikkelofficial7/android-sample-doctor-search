@@ -7,7 +7,7 @@ import com.android.mobile.alteacaretest.model.ResponseData
 import com.android.mobile.alteacaretest.room.dao.ResponseDao
 import com.android.mobile.alteacaretest.room.typeconverter.DoctorListConverter
 
-@Database(entities = [ResponseData::class], version = 1)
+@Database(entities = [ResponseData::class], version = 1, exportSchema = false)
 
 @TypeConverters(DoctorListConverter::class)
 

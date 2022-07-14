@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(ApplicationComponent::class)
-class AppModule {
+class RetrofitModule {
     @Provides
     fun provideBaseUrl() = BuildConfig.BaseUrl
 

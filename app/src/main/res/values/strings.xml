@@ -4,4 +4,5 @@
     <string name="hospital_filter">Filter Rumah Sakit</string>
     <string name="specialization_filter">Filter Spesialis</string>
     <string name="failed_load_doctor">Failed to load doctor</string>
+    <string name="last_search">Pencarian terakhir:</string>
 </resources>

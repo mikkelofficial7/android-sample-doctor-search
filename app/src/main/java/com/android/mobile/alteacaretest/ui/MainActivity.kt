@@ -2,8 +2,10 @@ package com.android.mobile.alteacaretest.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -12,17 +14,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.mobile.alteacaretest.R
 import com.android.mobile.alteacaretest.databinding.ActivityMainBinding
+import com.android.mobile.alteacaretest.databinding.ItemLastSearchBinding
+import com.android.mobile.alteacaretest.model.DoctorCache
 import com.android.mobile.alteacaretest.ui.adapter.DoctorListAdapter
 import com.android.mobile.alteacaretest.model.detail.Doctor
 import com.android.mobile.alteacaretest.model.detail.Hospital
 import com.android.mobile.alteacaretest.model.detail.Specialization
-import com.android.mobile.alteacaretest.room.RoomBuilder
+import com.android.mobile.alteacaretest.room.RoomHelper
 import com.android.mobile.alteacaretest.state.UIState
 import com.android.mobile.alteacaretest.ui.adapter.SpinnerHospitalAdapter
 import com.android.mobile.alteacaretest.ui.adapter.SpinnerSpecializationAdapter
 import com.android.mobile.alteacaretest.viewmodel.DoctorViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.*
 import java.util.HashSet
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -33,9 +39,13 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: DoctorViewModel by viewModels()
 
+    @Inject
+    lateinit var roomHelper: RoomHelper
+
     private var listSpecialization = ArrayList<Specialization>()
     private var listHospital = ArrayList<Hospital>()
     private var lastSearch = ""
+    private lateinit var typingCountDownTimer: CountDownTimer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initAdapter()
+        addViewLastSearch()
         loadAllDoctor()
         setupListener()
     }
@@ -55,8 +66,43 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                lastSearch = s.toString()
-                filterDoctor()
+                if (::typingCountDownTimer.isInitialized) typingCountDownTimer.cancel()
+
+                typingCountDownTimer = object : CountDownTimer(2000, 1000){
+                    override fun onTick(millisUntilFinished: Long) {
+                    }
+
+                    override fun onFinish() {
+                        lastSearch = s.toString()
+                        filterDoctor()
+
+                        if(lastSearch.isEmpty()) return
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val cache = DoctorCache(doctorName = lastSearch)
+
+                            val totalLastCache = roomHelper.initDoctorCacheDao()?.getAllDoctorCache()?.size ?: 0
+
+                            if(totalLastCache >= 3) {
+                                val firstRowCache = roomHelper.initDoctorCacheDao()?.getFirstRowDoctorCache()
+
+                                firstRowCache?.let {
+                                    roomHelper.initDoctorCacheDao()?.deleteDoctorCache(it)
+                                }
+                            }
+
+                            roomHelper.initDoctorCacheDao()?.insertAllDoctorCache(cache)
+
+
+                            withContext(Dispatchers.Main) {
+                                addViewLastSearch()
+                            }
+                        }
+                    }
+
+                }
+
+                typingCountDownTimer.start()
             }
 
         })
@@ -74,8 +120,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun addViewLastSearch() {
+        val listCache = roomHelper.initDoctorCacheDao()?.getAllDoctorCache()
+
+        if(listCache.isNullOrEmpty()) return
+
+        binding.viewLastSearch.removeAllViews()
+
+        listCache.forEach {
+            binding.viewLastSearch.addView(listOfLastDoctorSearch(it))
+        }
+        binding.viewLastSearch.requestLayout()
+
+        binding.tvLastSearchTitle.text = getString(R.string.last_search)
+    }
+
+    private fun listOfLastDoctorSearch(doctorCache: DoctorCache) : View {
+        val itemView = ItemLastSearchBinding.inflate(LayoutInflater.from(this))
+        itemView.tvName.text = doctorCache.doctorName
+        return itemView.root
+    }
+
     private fun loadAllDoctor() {
-        val dao = RoomBuilder.init(this)?.responseDao()
+        val dao = roomHelper.initDoctorDao()
 
         if(dao?.getResponseData()?.doctorList?.isNotEmpty() == true) {
             addDataDoctor(dao.getResponseData().doctorList)

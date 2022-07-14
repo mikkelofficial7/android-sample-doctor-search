@@ -12,7 +12,7 @@ object DoctorListConverter {
         return when {
             value.isNullOrEmpty() -> arrayListOf()
             else -> {
-                val listType = object : TypeToken<ArrayList<Doctor>?>(){}.type
+                val listType = object : TypeToken<ArrayList<Doctor>>(){}.type
                 Gson().fromJson(value, listType)
             }
         }

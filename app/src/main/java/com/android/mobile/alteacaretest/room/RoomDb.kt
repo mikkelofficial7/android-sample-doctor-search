@@ -3,17 +3,28 @@ package com.android.mobile.alteacaretest.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.android.mobile.alteacaretest.model.DoctorCache
-import com.android.mobile.alteacaretest.model.ResponseData
-import com.android.mobile.alteacaretest.room.dao.DoctorCacheDao
-import com.android.mobile.alteacaretest.room.dao.ResponseDao
-import com.android.mobile.alteacaretest.room.typeconverter.DoctorListConverter
+import com.android.mobile.alteacaretest.model.*
+import com.android.mobile.alteacaretest.room.converters.MovieBoxOfficeConverters
+import com.android.mobile.alteacaretest.room.converters.MovieListConverters
+import com.android.mobile.alteacaretest.room.dao.*
 
-@Database(entities = [ResponseData::class, DoctorCache::class], version = 1, exportSchema = false)
+@Database(entities = [
+    MoviePopularResponseData::class,
+    MovieTop250ResponseData::class,
+    MovieInTheaterResponseData::class,
+    MovieComingSoonResponseData::class,
+    MovieBoxOfficeResponse::class
+], version = 1, exportSchema = false)
 
-@TypeConverters(DoctorListConverter::class)
+@TypeConverters(
+    MovieListConverters::class,
+    MovieBoxOfficeConverters::class
+)
 
 abstract class RoomDb : RoomDatabase() {
-    abstract fun responseDao() : ResponseDao?
-    abstract fun doctorCacheDao() : DoctorCacheDao?
+    abstract fun moviePopularDao() : MoviePopularDao?
+    abstract fun movieTop250Dao() : MovieTop250Dao?
+    abstract fun movieInTheaterDao() : MovieInTheaterDao?
+    abstract fun movieComingSoonDao() : MovieComingSoonDao?
+    abstract fun movieBoxOfficeDao() : MovieBoxOfficeDao?
 }

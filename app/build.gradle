@@ -5,8 +5,8 @@ plugins {
     id 'dagger.hilt.android.plugin'
 }
 
-def BASE_URL = '"https://run.mocky.io/"'
-def URL_PATH = '"c9a2b598-9c93-4999-bd04-0194839ef2dc"'
+def BASE_URL = '"https://imdb-api.com/"'
+def APIKEY_PATH = '"k_a3tq1e1r"'
 
 android {
     compileSdk 31
@@ -20,7 +20,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "BaseUrl", BASE_URL)
-        buildConfigField("String", "UrlPath", URL_PATH)
+        buildConfigField("String", "ApikeyPath", APIKEY_PATH)
     }
 
     buildTypes {

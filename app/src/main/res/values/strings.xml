@@ -1,8 +1,10 @@
 <resources>
-    <string name="app_name">AlteaCare Test</string>
-    <string name="search_doctor">Cari nama dokter</string>
-    <string name="hospital_filter">Filter Rumah Sakit</string>
-    <string name="specialization_filter">Filter Spesialis</string>
-    <string name="failed_load_doctor">Failed to load doctor</string>
-    <string name="last_search">Pencarian terakhir:</string>
+    <string name="app_name">Movie Application</string>
+    <string name="failed_load_doctor">Failed to load movie</string>
+    <string name="top_250_movie">Top 250 Movies</string>
+    <string name="most_popular_movie">Most Popular</string>
+    <string name="in_theater_movie">In Theater</string>
+    <string name="coming_soon_movie">Coming Soon</string>
+    <string name="movie_profit">Got %1$s gross on %2$s week(s)</string>
+
 </resources>

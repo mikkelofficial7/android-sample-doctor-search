@@ -1,58 +1,51 @@
 package com.android.mobile.alteacaretest.ui
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.mobile.alteacaretest.R
 import com.android.mobile.alteacaretest.databinding.ActivityMainBinding
-import com.android.mobile.alteacaretest.model.*
-import com.android.mobile.alteacaretest.model.detail.MovieList
-import com.android.mobile.alteacaretest.ui.adapter.MovieListAdapter
+import com.android.mobile.alteacaretest.databinding.ItemLastSearchBinding
+import com.android.mobile.alteacaretest.model.DoctorCache
+import com.android.mobile.alteacaretest.ui.adapter.DoctorListAdapter
+import com.android.mobile.alteacaretest.model.detail.Doctor
+import com.android.mobile.alteacaretest.model.detail.Hospital
+import com.android.mobile.alteacaretest.model.detail.Specialization
 import com.android.mobile.alteacaretest.room.RoomHelper
-import com.android.mobile.alteacaretest.state.*
-import com.android.mobile.alteacaretest.ui.adapter.MovieBoxOfficeAdapter
-import com.android.mobile.alteacaretest.ui.adapter.MovieTypeAdapter
-import com.android.mobile.alteacaretest.viewmodel.*
+import com.android.mobile.alteacaretest.state.UIState
+import com.android.mobile.alteacaretest.ui.adapter.SpinnerHospitalAdapter
+import com.android.mobile.alteacaretest.ui.adapter.SpinnerSpecializationAdapter
+import com.android.mobile.alteacaretest.viewmodel.DoctorViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.*
+import java.util.HashSet
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val adapter: MovieListAdapter by lazy {
-        MovieListAdapter(onDetailClick = {
-            navigateDetailPage(it.id, it.title)
-        })
+    private val adapter: DoctorListAdapter by lazy {
+        DoctorListAdapter()
     }
 
-    private val adapterBoxOffice: MovieBoxOfficeAdapter by lazy {
-        MovieBoxOfficeAdapter(onDetailClick = {
-            navigateDetailPage(it.id, it.title)
-        })
-    }
-
-    private val adapterMovieType: MovieTypeAdapter by lazy {
-        MovieTypeAdapter(onMovieTypeClick = {
-            validateLoadMovie(it)
-        })
-    }
-
-    private val viewModelPopular: MoviePopularViewModel by viewModels()
-    private val viewModelTop250: MovieTop250ViewModel by viewModels()
-    private val viewModelInTheater: MovieInTheaterViewModel by viewModels()
-    private val viewModelComingSoon: MovieComingSoonViewModel by viewModels()
-    private val viewModelBoxOffice: MovieBoxOfficeViewModel by viewModels()
-
+    private val viewModel: DoctorViewModel by viewModels()
 
     @Inject
     lateinit var roomHelper: RoomHelper
+
+    private var listSpecialization = ArrayList<Specialization>()
+    private var listHospital = ArrayList<Hospital>()
+    private var lastSearch = ""
+    private lateinit var typingCountDownTimer: CountDownTimer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,216 +54,161 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initAdapter()
-        loadAllMovieType()
-        loadAllMovieBoxOffice()
-        loadAllMovieTop250()
+        addViewLastSearch()
+        loadAllDoctor()
         setupListener()
     }
 
     private fun setupListener() {
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-    }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (::typingCountDownTimer.isInitialized) typingCountDownTimer.cancel()
+
+                typingCountDownTimer = object : CountDownTimer(2000, 1000){
+                    override fun onTick(millisUntilFinished: Long) {
+                    }
+
+                    override fun onFinish() {
+                        lastSearch = s.toString()
+                        filterDoctor()
+
+                        if(lastSearch.isEmpty()) return
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val cache = DoctorCache(doctorName = lastSearch)
+
+                            val totalLastCache = roomHelper.initDoctorCacheDao()?.getAllDoctorCache()?.size ?: 0
+
+                            if(totalLastCache >= 3) {
+                                val firstRowCache = roomHelper.initDoctorCacheDao()?.getFirstRowDoctorCache()
+
+                                firstRowCache?.let {
+                                    roomHelper.initDoctorCacheDao()?.deleteDoctorCache(it)
+                                }
+                            }
+
+                            roomHelper.initDoctorCacheDao()?.insertAllDoctorCache(cache)
 
 
-    private fun loadAllMovieTop250() {
-        val dao = roomHelper.initMovieTop250Dao()
+                            withContext(Dispatchers.Main) {
+                                addViewLastSearch()
+                            }
+                        }
+                    }
 
-        if(!dao?.getAllTop250Movie()?.items.isNullOrEmpty()) {
-            dao?.getAllTop250Movie()?.let { addDataMovieTop250(it) }
-            hideLoading()
-            return
-        }
-
-        viewModelTop250.getMovieTop250LiveData().observe(this, Observer { state ->
-            when(state) {
-                is MovieTop250State.Loading -> {
-                    showLoading()
                 }
-                is MovieTop250State.SuccessLoad -> {
-                    dao?.insertAllTop250Movie(state.moviePopularResponse)
-                    addDataMovieTop250(state.moviePopularResponse)
-                    hideLoading()
-                }
-                is MovieTop250State.FailedLoad -> {
-                    showErrorMessage()
-                    hideLoading()
-                }
+
+                typingCountDownTimer.start()
             }
+
         })
-    }
 
-    private fun addDataMovieTop250(movieTop250ResponseData: MovieTop250ResponseData) {
-        adapter.addData(movieTop250ResponseData.items)
-    }
+        SpinnerHospitalAdapter.onHospitalSelect = { hospital ->
+            listHospital = hospital as ArrayList<Hospital>
 
-
-    private fun loadAllMoviePopular() {
-        val dao = roomHelper.initMoviePopularDao()
-
-        if(!dao?.getAllPopularMovie()?.items.isNullOrEmpty()) {
-            dao?.getAllPopularMovie()?.let { addDataMoviePopular(it) }
-            hideLoading()
-            return
+            filterDoctor()
         }
 
-        viewModelPopular.getMoviePopularLiveData().observe(this, Observer { state ->
-            when(state) {
-                is MoviePopularState.Loading -> {
-                    showLoading()
-                }
-                is MoviePopularState.SuccessLoad -> {
-                    dao?.insertAllPopularMovie(state.moviePopularResponse)
-                    addDataMoviePopular(state.moviePopularResponse)
-                    hideLoading()
-                }
-                is MoviePopularState.FailedLoad -> {
-                    showErrorMessage()
-                    hideLoading()
-                }
-            }
-        })
+        SpinnerSpecializationAdapter.onSpecializeSelect = { specialize ->
+            listSpecialization = specialize as ArrayList<Specialization>
+
+            filterDoctor()
+        }
     }
 
-    private fun addDataMoviePopular(moviePopularResponseData: MoviePopularResponseData) {
-        adapter.addData(moviePopularResponseData.items)
+    private fun addViewLastSearch() {
+        val listCache = roomHelper.initDoctorCacheDao()?.getAllDoctorCache()
+
+        if(listCache.isNullOrEmpty()) return
+
+        binding.viewLastSearch.removeAllViews()
+
+        listCache.forEach {
+            binding.viewLastSearch.addView(listOfLastDoctorSearch(it))
+        }
+        binding.viewLastSearch.requestLayout()
+
+        binding.tvLastSearchTitle.text = getString(R.string.last_search)
     }
 
-    private fun loadAllMovieInTheater() {
-        val dao = roomHelper.initMovieInTheaterDao()
+    private fun listOfLastDoctorSearch(doctorCache: DoctorCache) : View {
+        val itemView = ItemLastSearchBinding.inflate(LayoutInflater.from(this))
+        itemView.tvName.text = doctorCache.doctorName
+        return itemView.root
+    }
 
-        if(!dao?.getAllInTheaterMovie()?.items.isNullOrEmpty()) {
-            dao?.getAllInTheaterMovie()?.let { addDataMovieInTheater(it) }
-            hideLoading()
-            return
+    private fun loadAllDoctor() {
+        val dao = roomHelper.initDoctorDao()
+
+        if(dao?.getResponseData()?.doctorList?.isNotEmpty() == true) {
+            addDataDoctor(dao.getResponseData().doctorList)
+            setDataFilter(dao.getResponseData().doctorList)
+        } else {
+            viewModel.getDoctorLiveData().observe(this, Observer { state ->
+                when(state) {
+                    is UIState.Loading -> {
+                        showLoading()
+                    }
+                    is UIState.SuccessLoad -> {
+                        dao?.insertAllDoctor(state.response)
+
+                        addDataDoctor(state.response.doctorList)
+                        setDataFilter(state.response.doctorList)
+
+                        hideLoading()
+                    }
+                    is UIState.FailedLoad -> {
+                        showErrorMessage()
+
+                        hideLoading()
+                    }
+                }
+            })
+        }
+    }
+
+    private fun addDataDoctor(doctorList: ArrayList<Doctor>) {
+        adapter.addData(doctorList)
+    }
+
+    private fun setDataFilter(doctorList: ArrayList<Doctor>) {
+        val hashSpecialization = HashSet<Specialization>()
+        val hashHospital = HashSet<Hospital>()
+
+        listHospital.add(Hospital(name = getString(R.string.hospital_filter)))
+        listSpecialization.add(Specialization(name = getString(R.string.specialization_filter)))
+
+        doctorList.forEach {
+            hashSpecialization.add(it.specialization)
+            hashHospital.add(it.hospital)
         }
 
-        viewModelInTheater.getMovieInTheaterLiveData().observe(this, Observer { state ->
-            when(state) {
-                is MovieInTheaterState.Loading -> {
-                    showLoading()
-                }
-                is MovieInTheaterState.SuccessLoad -> {
-                    dao?.insertAllInTheaterMovie(state.moviePopularResponse)
-                    addDataMovieInTheater(state.moviePopularResponse)
-                    hideLoading()
-                }
-                is MovieInTheaterState.FailedLoad -> {
-                    showErrorMessage()
-                    hideLoading()
-                }
-            }
-        })
+        listSpecialization.addAll(ArrayList(hashSpecialization))
+        listHospital.addAll(ArrayList(hashHospital))
+
+        setSpinnerData()
     }
 
-    private fun addDataMovieInTheater(movieResponseData: MovieInTheaterResponseData) {
-        adapter.addData(movieResponseData.items)
+    private fun setSpinnerData() {
+        val hospitalAdapter = SpinnerHospitalAdapter(this, listHospital)
+        binding.spinnerHospital.adapter = hospitalAdapter
+
+        val specializationAdapter = SpinnerSpecializationAdapter(this, listSpecialization)
+        binding.spinnerSpecialization.adapter = specializationAdapter
     }
 
-    private fun loadAllMovieComingSoon() {
-        val dao = roomHelper.initMovieComingSoonDao()
-
-        if(!dao?.getAllComingSoonMovie()?.items.isNullOrEmpty()) {
-            dao?.getAllComingSoonMovie()?.let { addDataMovieComingSoon(it) }
-            hideLoading()
-            return
-        }
-
-        viewModelComingSoon.getMovieComingSoonLiveData().observe(this, { state ->
-            when(state) {
-                is MovieComingSoonState.Loading -> {
-                    showLoading()
-                }
-                is MovieComingSoonState.SuccessLoad -> {
-                    dao?.insertAllComingSoonMovie(state.moviePopularResponse)
-                    addDataMovieComingSoon(state.moviePopularResponse)
-                    hideLoading()
-                }
-                is MovieComingSoonState.FailedLoad -> {
-                    showErrorMessage()
-                    hideLoading()
-                }
-            }
-        })
-    }
-
-    private fun addDataMovieComingSoon(movieResponseData: MovieComingSoonResponseData) {
-        adapter.addData(movieResponseData.items)
-    }
-
-    private fun loadAllMovieBoxOffice() {
-        val dao = roomHelper.initMovieBoxOfficeDao()
-
-        if(!dao?.getAllBoxOfficeMovie()?.items.isNullOrEmpty()) {
-            dao?.getAllBoxOfficeMovie()?.let { addDataMovieBoxOffice(it) }
-            hideLoading()
-            return
-        }
-
-        viewModelBoxOffice.getMovieBoxOfficeLiveData().observe(this, { state ->
-            when(state) {
-                is MovieBoxOfficeState.Loading -> {
-                }
-                is MovieBoxOfficeState.SuccessLoad -> {
-                    dao?.insertAllBoxOfficeMovie(state.movieResponse)
-                    addDataMovieBoxOffice(state.movieResponse)
-                }
-                is MovieBoxOfficeState.FailedLoad -> {
-                    showErrorMessage()
-                }
-            }
-        })
-    }
-
-    private fun addDataMovieBoxOffice(movieResponseData: MovieBoxOfficeResponse) {
-        adapterBoxOffice.addData(movieResponseData.items)
-    }
-
-    private fun loadAllMovieType(){
-        val array = resources.getStringArray(R.array.movie_type_array)
-
-        val movieTypes = ArrayList<MovieType>()
-        for(i in array.indices) {
-            movieTypes.add(MovieType(id = i, array[i]))
-        }
-
-        addDataMovieType(movieTypes)
-    }
-
-    private fun addDataMovieType(movieTypes: ArrayList<MovieType>) {
-        adapterMovieType.addCategory(movieTypes)
+    private fun filterDoctor() {
+        adapter.setFilterDoctor(listHospital, listSpecialization, lastSearch)
     }
 
     private fun initAdapter() {
-        binding.rvMovie.layoutManager = GridLayoutManager(this, 3)
-        binding.rvMovie.setHasFixedSize(true)
-        binding.rvMovie.adapter = adapter
-
-        binding.rvMovieBoxOffice.layoutManager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
-        binding.rvMovieBoxOffice.setHasFixedSize(true)
-        binding.rvMovieBoxOffice.adapter = adapterBoxOffice
-
-        binding.rvMovieType.layoutManager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
-        binding.rvMovieType.setHasFixedSize(true)
-        binding.rvMovieType.adapter = adapterMovieType
-    }
-
-    private fun validateLoadMovie(type: MovieType) {
-        adapterMovieType.setLastMovieTypeClick(type)
-
-        when(type.id) {
-            0 -> loadAllMovieTop250()
-            1 -> loadAllMoviePopular()
-            2 -> loadAllMovieInTheater()
-            3 -> loadAllMovieComingSoon()
-        }
-    }
-
-    private fun navigateDetailPage(id: String, title: String) {
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.putExtra(DetailActivity.TAG_MOVIE_ID, id)
-        intent.putExtra(DetailActivity.TAG_MOVIE_TITLE, title)
-        intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        startActivity(intent)
+        binding.rvDoctor.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        binding.rvDoctor.setHasFixedSize(true)
+        binding.rvDoctor.adapter = adapter
     }
 
     private fun showLoading() {

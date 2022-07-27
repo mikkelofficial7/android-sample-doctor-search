@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string-array name="movie_type_array">
-        <item>@string/top_250_movie</item>
-        <item>@string/most_popular_movie</item>
-        <item>@string/in_theater_movie</item>
-        <item>@string/coming_soon_movie</item>
-    </string-array>
-</resources>

@@ -1,12 +1,11 @@
 package com.android.mobile.alteacaretest.room
 
-import com.android.mobile.alteacaretest.room.dao.*
+import com.android.mobile.alteacaretest.room.dao.DoctorCacheDao
+import com.android.mobile.alteacaretest.room.dao.ResponseDao
 import javax.inject.Inject
 
 class RoomHelper @Inject constructor(val roomDb: RoomDb) {
-    fun initMoviePopularDao() : MoviePopularDao? = roomDb.moviePopularDao()
-    fun initMovieTop250Dao() : MovieTop250Dao? = roomDb.movieTop250Dao()
-    fun initMovieInTheaterDao() : MovieInTheaterDao? = roomDb.movieInTheaterDao()
-    fun initMovieComingSoonDao() : MovieComingSoonDao? = roomDb.movieComingSoonDao()
-    fun initMovieBoxOfficeDao() : MovieBoxOfficeDao? = roomDb.movieBoxOfficeDao()
+    fun initDoctorDao() : ResponseDao? = roomDb.responseDao()
+    fun initDoctorCacheDao() : DoctorCacheDao? = roomDb.doctorCacheDao()
+
 }
